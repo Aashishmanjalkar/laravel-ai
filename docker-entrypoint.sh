@@ -5,6 +5,8 @@ cd /var/www
 
 echo "Bootstrapping Laravel..."
 
+export COMPOSER_PROCESS_TIMEOUT=0
+
 # -----------------------------------
 # 1. Install Laravel if missing
 # -----------------------------------
@@ -13,7 +15,7 @@ if [ ! -f artisan ]; then
 
     rm -rf temp
 
-    composer create-project laravel/laravel temp
+    composer create-project laravel/laravel temp --no-interaction --prefer-dist --no-progress
 
     echo "Moving Laravel files..."
 
@@ -34,7 +36,7 @@ cp .env.docker .env
 # -----------------------------------
 if [ ! -d vendor ]; then
     echo "Installing dependencies..."
-    composer install --no-interaction --prefer-dist --optimize-autoloader
+    composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
 fi
 
 # -----------------------------------
@@ -53,13 +55,13 @@ if ! grep -q "^APP_KEY=base64" .env; then
 fi
 
 # -----------------------------------
-# 6. Wait for MySQL
+# 6. Wait for PostgreSQL
 # -----------------------------------
-echo "Waiting for MySQL..."
+echo "Waiting for PostgreSQL..."
 
 until php -r "
 try {
-    new PDO('mysql:host=mysql;dbname=laravel_db', 'user', 'user123');
+    new PDO('pgsql:host=postgres;port=5432;dbname=laravel_db', 'user', 'user123');
     echo 'DB connected\n';
 } catch (Exception \$e) {
     exit(1);
